@@ -1,8 +1,12 @@
 package com.singpaulee.talkinghuman
 
+import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.speech.RecognizerIntent
 import android.speech.tts.TextToSpeech
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
@@ -36,17 +40,34 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 //QUEUE MODE
-                //QUEUE_FLUSH : Ketika sedang memutar tts , kemudian teks diganti dan tekan tombol putar , maka tts yang lama akan otomatis tergantikan
+                //QUEUE_FLUSH : Ketika sedang memutar tts , kemudian teks diganti dan tekan tombol putar ,
+                //              maka tts yang lama akan otomatis tergantikan
                 //QUEUE_ADD : Menjadikan sebuah antrian , menyelesaikan tts yang lama baru memulai yang baru
+            }
+        }
+
+        //TODO 10 Open Speech To Text
+        ma_btn_stt.onClick {
+            var intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+            intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
+
+            //TODO 10.1 check device support speech to text or not
+            if (intent.resolveActivity(packageManager) != null) {
+                startActivityForResult(intent, 102)
+            } else {
+                toast("Perangkat tidak mendukung text to speech")
             }
         }
 
     }
 
+    @SuppressLint("SetTextI18n")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         when (requestCode) {
             101 -> {
+                //TODO 7.1 Get Result For Check TTS DATA
                 if (resultCode == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS) {
                     Log.d("TEXTTOSPEECH", "Text To Speech data PASS")
                     initializationTTS()
@@ -56,6 +77,13 @@ class MainActivity : AppCompatActivity() {
                     var intentInstallTTS = Intent()
                     intentInstallTTS.action = TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA
                     startActivity(intentInstallTTS)
+                }
+            }
+            //TODO 11 Get Result For Speech To Text and write into edittext
+            102 -> {
+                if (resultCode == Activity.RESULT_OK && data != null) {
+                    var listResult = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
+                    ma_edt_teks.setText("" + listResult[0])
                 }
             }
         }
